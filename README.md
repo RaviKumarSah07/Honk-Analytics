@@ -1,7 +1,7 @@
 # 🚗 Honk Analytics System
 
 A full-stack web application that simulates an IoT-based vehicle honking data system and provides analytics through a dashboard.
-
+![alt text](image.png)
 ---
 
 ## 📌 Overview
