@@ -12,9 +12,10 @@ A real-time noise pollution analytics platform built with the **MERN stack**. Ho
 ## 📸 Screenshots
 
 | Overview Dashboard | Ahmedabad Dashboard |
-|---|---|
+|![alt text](home.png)|![alt text](city.png)|
 | Dark themed landing with live stats | City-level analytics with charts |
 
+![alt text](data.png)
 > Both dashboards auto-refresh every 5 seconds with live data.
 
 ---
