@@ -1,0 +1,66 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0f1117;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+}
+
+/* ─── Navbar ─────────────────────────────────────────────────────────────── */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 40px;
+  background: rgba(15, 17, 23, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1f2937;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar__brand {
+  color: #f97316;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.navbar__links {
+  display: flex;
+  gap: 4px;
+}
+
+.navbar__link {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.navbar__link:hover {
+  color: #f3f4f6;
+  background: #1f2937;
+}
+
+.navbar__link--active {
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.1);
+}
+
+/* Make Ahmedabad dashboard background consistent with dark theme */
+.dashboard {
+  background: #0f1117 !important;
+}
+
+.dashboard__title,
+.dashboard__subtitle {
+  color: #f3f4f6 !important;
+}

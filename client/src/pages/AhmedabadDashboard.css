@@ -1,0 +1,171 @@
+/* ─── Page Layout ────────────────────────────────────────────────────────── */
+.dashboard {
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 32px 40px;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+.dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.dashboard__city-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid #fed7aa;
+  margin-bottom: 10px;
+}
+
+.dashboard__title {
+  font-size: 30px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+}
+
+.dashboard__subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.dashboard__live-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #10b981;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 5px 12px;
+  border-radius: 99px;
+  margin-top: 4px;
+}
+
+.live-indicator {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(1.3); }
+}
+
+/* ─── Stat Cards Grid ─────────────────────────────────────────────────────── */
+.dashboard__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard__stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .dashboard         { padding: 20px 16px; }
+  .dashboard__stats  { grid-template-columns: 1fr; }
+  .dashboard__charts { grid-template-columns: 1fr; }
+}
+
+/* ─── Charts Grid ─────────────────────────────────────────────────────────── */
+.dashboard__charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .dashboard__charts { grid-template-columns: 1fr; }
+}
+
+/* ─── Peak Day Highlight Banner ───────────────────────────────────────────── */
+.dashboard__peak-highlight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+
+.peak-highlight__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.peak-highlight__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d97706;
+  margin: 0 0 4px 0;
+}
+
+.peak-highlight__value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+}
+
+/* ─── Custom Tooltip ──────────────────────────────────────────────────────── */
+.chart-tooltip {
+  background: #111827;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.chart-tooltip__label {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 0 0 2px 0;
+}
+
+.chart-tooltip__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* ─── Error State ─────────────────────────────────────────────────────────── */
+.dashboard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 12px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.dashboard-error span {
+  font-size: 36px;
+}
