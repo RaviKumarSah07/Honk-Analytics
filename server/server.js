@@ -3,6 +3,7 @@ const mongoose=require('mongoose');
 const cors=require('cors');
 const honkRoutes=require("./routes/honkroutes");
 const Honk=require("./models/Honk")
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 
 PORT=5000;
@@ -30,5 +31,8 @@ setInterval(async () => {
 
   console.log("Auto data added");
 }, 3000);
+
+
+app.use("/api/analytics", analyticsRoutes);
 
 app.listen(PORT, () => console.log("Server running on port 5000"));""

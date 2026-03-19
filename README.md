@@ -44,3 +44,23 @@ This project simulates how IoT devices installed in vehicles send honking data t
 ```bash
 git clone https://github.com/RaviKumarSah07/honk-analytics.git
 cd honk-analytics
+
+Honk-Analytics-System/
+├── backend/
+│   ├── models/
+│   │   └── Honk.js                      ← Mongoose schema
+│   ├── controllers/
+│   │   └── analyticsController.js       ← All 3 API handlers
+│   ├── routes/
+│   │   └── analyticsRoutes.js           ← Route definitions
+│   └── seedData.js                      ← One-time seed script
+│
+└── frontend/src/
+    ├── hooks/
+    │   └── useFetch.js                  ← Reusable data-fetching hook
+    ├── components/
+    │   ├── StatCard.jsx + .css          ← Metric cards
+    │   ├── ChartCard.jsx + .css         ← Chart wrapper
+    │   └── LoadingSpinner.jsx + .css    ← Loading state
+    └── pages/
+        └── AhmedabadDashboard.jsx + .css ← Main dashboard page
