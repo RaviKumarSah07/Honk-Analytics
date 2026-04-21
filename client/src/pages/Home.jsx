@@ -11,13 +11,18 @@ import "./Home.css";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const COLORS = [
-  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)",
-  "var(--chart-4)", "var(--chart-5)", "var(--chart-6)",
-];
-
 // Use raw hex for Recharts (CSS vars don't resolve inside SVG attrs reliably)
 const HEX_COLORS = ["#f97316", "#6366f1", "#06b6d4", "#10b981", "#f43f5e", "#eab308"];
+
+const normalizeLocations = (items = []) =>
+  items
+    .map((item) => ({
+      location: item.location ?? item.city ?? "Unknown",
+      count: Number(item.count ?? 0),
+    }))
+    .filter((item) => item.location);
+
+const getVehicleId = (honk) => honk.vehicleId ?? honk.vehicleID ?? null;
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -33,7 +38,10 @@ const ChartTooltip = ({ active, payload, label }) => {
 const CountUp = ({ target }) => {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
-    if (!target) return;
+    if (!target) {
+      setDisplay(0);
+      return;
+    }
     let val = 0;
     const step = Math.max(1, Math.ceil(target / 45));
     const t = setInterval(() => {
@@ -53,6 +61,8 @@ function Home() {
   const [loading,   setLoading]   = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
         const [countRes, locRes, allRes] = await Promise.all([
@@ -60,19 +70,27 @@ function Home() {
           axios.get(`${API}/api/honks/by-location`),
           axios.get(`${API}/api/honks`),
         ]);
-        setTotal(countRes.data.totalHonks);
-        setLocations(locRes.data);
-        setAllHonks(allRes.data);
+
+        if (!isMounted) return;
+
+        setTotal(countRes.data.totalHonks ?? 0);
+        setLocations(normalizeLocations(locRes.data));
+        setAllHonks(Array.isArray(allRes.data) ? allRes.data : []);
       } catch (err) {
         console.error("Home fetch error:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
     const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const topLocation  = useMemo(() =>
@@ -80,7 +98,7 @@ function Home() {
   [locations]);
 
   const uniqueVehicles = useMemo(() =>
-    new Set(allHonks.map(h => h.vehicleID)).size,
+    new Set(allHonks.map((h) => getVehicleId(h)).filter(Boolean)).size,
   [allHonks]);
 
   if (loading) return <LoadingSpinner message="Loading overview..." />;

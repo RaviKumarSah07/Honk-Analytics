@@ -5,6 +5,7 @@ const Honk = require("../models/Honk");
 const getDailyHonks = async (req, res) => {
   try {
     const city = req.query.city || "Ahmedabad";
+    console.log("Requested city:", city);
 
     const dailyData = await Honk.aggregate([
       { $match: { city } },
