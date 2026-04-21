@@ -1,54 +1,56 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, ResponsiveContainer, Legend,
 } from "recharts";
+import StatCard       from "../components/StatCard";
+import ChartCard      from "../components/ChartCard";
+import LoadingSpinner from "../components/LoadingSpinner";
 import "./Home.css";
 
-const API = "http://localhost:5000";
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-// ─── Colour palette for pie/bar slices ───────────────────────────────────────
-const SLICE_COLORS = ["#f97316", "#8b5cf6", "#06b6d4", "#10b981", "#f43f5e", "#eab308"];
+const COLORS = [
+  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)",
+  "var(--chart-4)", "var(--chart-5)", "var(--chart-6)",
+];
 
-// ─── Custom dark tooltip ──────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="home-tooltip">
-        <p className="home-tooltip__label">{label}</p>
-        <p className="home-tooltip__value">{payload[0].value} honks</p>
-      </div>
-    );
-  }
-  return null;
+// Use raw hex for Recharts (CSS vars don't resolve inside SVG attrs reliably)
+const HEX_COLORS = ["#f97316", "#6366f1", "#06b6d4", "#10b981", "#f43f5e", "#eab308"];
+
+const ChartTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="home-tooltip">
+      <p className="home-tooltip__label">{label}</p>
+      <p className="home-tooltip__value">{payload[0].value} honks</p>
+    </div>
+  );
 };
 
-// ─── Animated count-up number ─────────────────────────────────────────────────
+// Animated count-up
 const CountUp = ({ target }) => {
   const [display, setDisplay] = useState(0);
-
   useEffect(() => {
     if (!target) return;
-    let start = 0;
-    const step = Math.ceil(target / 40);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { setDisplay(target); clearInterval(timer); }
-      else setDisplay(start);
-    }, 30);
-    return () => clearInterval(timer);
+    let val = 0;
+    const step = Math.max(1, Math.ceil(target / 45));
+    const t = setInterval(() => {
+      val += step;
+      if (val >= target) { setDisplay(target); clearInterval(t); }
+      else setDisplay(val);
+    }, 28);
+    return () => clearInterval(t);
   }, [target]);
-
   return <>{display.toLocaleString()}</>;
 };
 
-// ─── Home Page ────────────────────────────────────────────────────────────────
 function Home() {
-  const [total, setTotal]         = useState(0);
+  const [total,     setTotal]     = useState(0);
   const [locations, setLocations] = useState([]);
-  const [topLocation, setTop]     = useState(null);
-  const [uniqueVehicles, setUniq] = useState(0);
+  const [allHonks,  setAllHonks]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,20 +60,13 @@ function Home() {
           axios.get(`${API}/api/honks/by-location`),
           axios.get(`${API}/api/honks`),
         ]);
-
         setTotal(countRes.data.totalHonks);
         setLocations(locRes.data);
-
-        // Derive top location
-        const sorted = [...locRes.data].sort((a, b) => b.count - a.count);
-        setTop(sorted[0] || null);
-
-        // Count unique vehicles from full honk list
-        const uniq = new Set(allRes.data.map(h => h.vehicleID)).size;
-        setUniq(uniq);
-
+        setAllHonks(allRes.data);
       } catch (err) {
         console.error("Home fetch error:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -80,152 +75,131 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const topLocation  = useMemo(() =>
+    [...locations].sort((a, b) => b.count - a.count)[0] || null,
+  [locations]);
+
+  const uniqueVehicles = useMemo(() =>
+    new Set(allHonks.map(h => h.vehicleID)).size,
+  [allHonks]);
+
+  if (loading) return <LoadingSpinner message="Loading overview..." />;
+
   return (
-    <div className="home">
+    <div className="home page-container">
 
-      {/* ── Hero / Intro ── */}
-      <section className="home__hero">
-        <div className="home__hero-text">
-          <span className="home__eyebrow">🔊 Real-time noise intelligence</span>
-          <h1 className="home__headline">
-            Every honk tells<br />
-            <span className="home__headline--accent">a story.</span>
-          </h1>
-          <p className="home__description">
-            Honk Analytics captures vehicle horn data across Indian cities in real
-            time — helping urban planners, researchers, and citizens understand
-            noise pollution patterns, peak traffic hours, and hotspot locations.
-          </p>
-          <div className="home__tags">
-            <span className="tag">🏙️ Multi-city</span>
-            <span className="tag">📡 Live data</span>
-            <span className="tag">🚗 Vehicle tracking</span>
-            <span className="tag">📊 Aggregated insights</span>
-          </div>
+      {/* ── Header ── */}
+      <div className="home__header anim-1">
+        <div>
+          <p className="section-label">Overview</p>
+          <h1 className="home__title">Honk Analytics</h1>
+          <p className="home__subtitle">Real-time noise intelligence across Indian cities</p>
         </div>
-
-        {/* Live pulse graphic */}
-        <div className="home__hero-visual">
-          <div className="pulse-ring pulse-ring--1" />
-          <div className="pulse-ring pulse-ring--2" />
-          <div className="pulse-ring pulse-ring--3" />
-          <div className="pulse-core">
-            <span>📢</span>
-          </div>
+        <div className="home__live-badge">
+          <span className="live-dot" /> Live · refreshes every 5s
         </div>
-      </section>
+      </div>
 
       {/* ── Stat Cards ── */}
-      <section className="home__stats">
-        <div className="hstat-card hstat-card--orange">
-          <p className="hstat-card__label">Total Honks</p>
-          <h2 className="hstat-card__value">
-            <CountUp target={total} />
-          </h2>
-          <p className="hstat-card__sub">Recorded so far</p>
-        </div>
-
-        <div className="hstat-card hstat-card--violet">
-          <p className="hstat-card__label">Locations Tracked</p>
-          <h2 className="hstat-card__value">
-            <CountUp target={locations.length} />
-          </h2>
-          <p className="hstat-card__sub">Unique zones</p>
-        </div>
-
-        <div className="hstat-card hstat-card--cyan">
-          <p className="hstat-card__label">Unique Vehicles</p>
-          <h2 className="hstat-card__value">
-            <CountUp target={uniqueVehicles} />
-          </h2>
-          <p className="hstat-card__sub">Active contributors</p>
-        </div>
-
-        <div className="hstat-card hstat-card--green">
-          <p className="hstat-card__label">Noisiest Zone</p>
-          <h2 className="hstat-card__value hstat-card__value--sm">
-            {topLocation?.location ?? "—"}
-          </h2>
-          <p className="hstat-card__sub">{topLocation?.count ?? 0} honks</p>
-        </div>
-      </section>
+      <div className="home__stats anim-2">
+        <StatCard
+          title="Total Honks"
+          value={<CountUp target={total} />}
+          subtitle="All time recorded"
+          icon="📢"
+          accent="#f97316"
+        />
+        <StatCard
+          title="Locations"
+          value={locations.length}
+          subtitle="Unique zones tracked"
+          icon="📍"
+          accent="#6366f1"
+        />
+        <StatCard
+          title="Unique Vehicles"
+          value={<CountUp target={uniqueVehicles} />}
+          subtitle="Active contributors"
+          icon="🚗"
+          accent="#06b6d4"
+        />
+        <StatCard
+          title="Noisiest Zone"
+          value={topLocation?.location ?? "—"}
+          subtitle={`${(topLocation?.count ?? 0).toLocaleString()} honks`}
+          icon="🔥"
+          accent="#10b981"
+        />
+      </div>
 
       {/* ── Charts ── */}
-      <section className="home__charts">
-
-        {/* Bar chart — honks by location */}
-        <div className="home__chart-card">
-          <div className="home__chart-header">
-            <h3 className="home__chart-title">Honks by Location</h3>
-            <p className="home__chart-sub">Which zones are loudest right now?</p>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={locations} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+      <div className="home__charts anim-3">
+        <ChartCard
+          title="Honks by Location"
+          subtitle="Which zones are loudest right now?"
+          badge="Live"
+        >
+          <ResponsiveContainer width="100%" height={268}>
+            <BarChart data={locations} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
               <XAxis
                 dataKey="location"
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-                axisLine={false}
+                tick={{ fontSize: 11, fill: "var(--text-muted)", fontFamily: "Outfit" }}
+                tickLine={false} axisLine={false}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-                axisLine={false}
+                tick={{ fontSize: 11, fill: "var(--text-muted)", fontFamily: "Outfit" }}
+                tickLine={false} axisLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={40}>
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(249,115,22,0.06)" }} />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={42}>
                 {locations.map((_, i) => (
-                  <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
+                  <Cell key={i} fill={HEX_COLORS[i % HEX_COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
 
-        {/* Pie chart — share by location */}
-        <div className="home__chart-card">
-          <div className="home__chart-header">
-            <h3 className="home__chart-title">Location Share</h3>
-            <p className="home__chart-sub">Proportional noise distribution</p>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
+        <ChartCard
+          title="Location Share"
+          subtitle="Proportional noise distribution"
+        >
+          <ResponsiveContainer width="100%" height={268}>
             <PieChart>
               <Pie
                 data={locations}
                 dataKey="count"
                 nameKey="location"
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
+                cx="50%" cy="50%"
+                innerRadius={62}
                 outerRadius={100}
                 paddingAngle={3}
               >
                 {locations.map((_, i) => (
-                  <Cell key={i} fill={SLICE_COLORS[i % SLICE_COLORS.length]} />
+                  <Cell key={i} fill={HEX_COLORS[i % HEX_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<ChartTooltip />} />
               <Legend
                 iconType="circle"
-                iconSize={8}
-                wrapperStyle={{ fontSize: "12px", color: "#6b7280" }}
+                iconSize={7}
+                wrapperStyle={{ fontSize: "12px" }}
               />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
+      </div>
 
-      </section>
-
-      {/* ── Location leaderboard ── */}
+      {/* ── Leaderboard ── */}
       {locations.length > 0 && (
-        <section className="home__leaderboard">
+        <div className="home__leaderboard glass-card anim-4">
           <h3 className="home__leaderboard-title">📍 Location Leaderboard</h3>
           <div className="leaderboard__list">
             {[...locations]
               .sort((a, b) => b.count - a.count)
               .map((item, i) => {
-                const maxCount = locations.reduce((m, l) => Math.max(m, l.count), 1);
-                const pct = Math.round((item.count / maxCount) * 100);
+                const max = Math.max(...locations.map(l => l.count), 1);
+                const pct = Math.round((item.count / max) * 100);
                 return (
                   <div className="leaderboard__row" key={item.location}>
                     <span className="leaderboard__rank">#{i + 1}</span>
@@ -233,10 +207,7 @@ function Home() {
                     <div className="leaderboard__bar-wrap">
                       <div
                         className="leaderboard__bar-fill"
-                        style={{
-                          width: `${pct}%`,
-                          background: SLICE_COLORS[i % SLICE_COLORS.length],
-                        }}
+                        style={{ width: `${pct}%`, background: HEX_COLORS[i % HEX_COLORS.length] }}
                       />
                     </div>
                     <span className="leaderboard__count">{item.count.toLocaleString()}</span>
@@ -244,14 +215,13 @@ function Home() {
                 );
               })}
           </div>
-        </section>
+        </div>
       )}
 
-      {/* ── Footer note ── */}
       <footer className="home__footer">
-        <span className="live-dot" /> Data refreshes every 5 seconds &nbsp;·&nbsp; Built with MERN Stack
+        <span className="live-dot" />
+        Auto-refreshing every 5 seconds &nbsp;·&nbsp; MERN Stack
       </footer>
-
     </div>
   );
 }
